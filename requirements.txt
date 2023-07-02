@@ -1,0 +1,5 @@
+dropbox
+streamlit
+streamlit_chat
+langchain
+dotenv
