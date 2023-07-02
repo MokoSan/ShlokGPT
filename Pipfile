@@ -9,6 +9,7 @@ streamlit = "*"
 streamlit-chat = "*"
 langchain = "*"
 python-dotenv = "*"
+dropbox = "*"
 
 [dev-packages]
 
