@@ -2,17 +2,20 @@ from typing import Dict
 import streamlit as st
 import uuid
 import os
-import dropbox
 from streamlit_chat import message
 import requests
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import HumanMessagePromptTemplate, ChatPromptTemplate
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 class ShlokGPT(object):
     def __init__(self):
-        key = os.getenv("OPENAI_API_KEY") 
-        self.llm = ChatOpenAI(openai_api_key=key, temperature=0, model='gpt-3.5-turbo')
+        openai_key = os.getenv("OPENAI_API_KEY") 
+        url: str = os.environ.get("SUPABASE_URL")
+        key: str = os.environ.get("SUPABASE_KEY")
+        self.supabase: Client = create_client(url, key)
+        self.llm = ChatOpenAI(openai_api_key=openai_key, temperature=0, model='gpt-3.5-turbo')
         self.human_template = HumanMessagePromptTemplate.from_template(
         '''Generate a 6 line sanskrit slok about the following topics: {topics}. 
 
@@ -22,7 +25,6 @@ class ShlokGPT(object):
         Translation:
         ''')
         self.chat_prompt = ChatPromptTemplate.from_messages([self.human_template])
-        self.dbx = dropbox.Dropbox(os.getenv("DROPBOX_API_KEY"))
 
     def chat(self, topics: str) -> Dict[str, str]:
         topics = topics.strip()
@@ -43,10 +45,14 @@ class ShlokGPT(object):
             }
             url = f'https://api.narakeet.com/text-to-speech/m4a?voice=amitabh'
             file = f'{str(uuid.uuid4())}.m4a'
+            if not os.path.exists(os.path.join(os.curdir, 'static')):
+                os.makedirs(os.path.join(os.curdir, 'static'))
+
             file_data = requests.post(url, **options).content
-            self.dbx.files_upload(file_data, f"/Shloks/{file}")
-            file = self.dbx.sharing_create_shared_link(f"/Shloks/{file}").url.replace('dl=0', 'dl=1')
-            return file
+            file_name = str(uuid.uuid4()) + ".m4a"
+            res = self.supabase.storage.from_('shloks').upload(file_name, file_data)
+            url = self.supabase.storage.from_('shloks').get_public_url(file_name)
+            return url 
         except Exception as ex:
             print(ex)
 

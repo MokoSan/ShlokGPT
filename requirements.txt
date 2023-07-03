@@ -1,6 +1,0 @@
-streamlit
-streamlit_chat
-langchain
-dotenv
-dropbox
-openai
