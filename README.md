@@ -13,7 +13,7 @@ This repo hosts code that generates Sanskrit Shloks with AI and uses Text to Spe
 ### How to Run Locally
 
 1. Ensure you have python 3.8+.
-2. Clone the repo: git clone https://github.com/MokoSan/ResumeChain.git.
+2. Clone the repo: ``git clone https://github.com/MokoSan/ShlokGPT.git``.
 3. Install [pipenv](https://pipenv.pypa.io/en/latest/) and run: ``pipenv shell``.
 4. Ensure you install all the prerequistes.
 4. Ensure you have streamlit in your path.
