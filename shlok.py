@@ -11,10 +11,13 @@ from supabase import create_client, Client
 
 class ShlokGPT(object):
     def __init__(self):
-        openai_key = os.getenv("OPENAI_API_KEY") 
+        # Create the Supabase Client.
         url: str = os.environ.get("SUPABASE_URL")
         key: str = os.environ.get("SUPABASE_KEY")
         self.supabase: Client = create_client(url, key)
+
+        # Create the ChatOpenAI Chain.
+        openai_key = os.getenv("OPENAI_API_KEY") 
         self.llm = ChatOpenAI(openai_api_key=openai_key, temperature=0, model='gpt-3.5-turbo')
         self.human_template = HumanMessagePromptTemplate.from_template(
         '''Generate a 6 line sanskrit slok about the following topics: {topics}. 
@@ -37,17 +40,13 @@ class ShlokGPT(object):
         translation = split[1]
         return {'shlok': shlok, 'translation' : translation}
 
-    def generate_audio(self, text):
+    def generate_audio(self, text) -> str:
         try:
             options = { 
                 'headers': { 'Accept': 'application/octet-stream', 'Content-Type': 'text/plain', 'x-api-key': os.getenv('NARKEET_API_KEY'), },
                 'data': text.encode('utf8')
             }
             url = f'https://api.narakeet.com/text-to-speech/m4a?voice=amitabh'
-            file = f'{str(uuid.uuid4())}.m4a'
-            if not os.path.exists(os.path.join(os.curdir, 'static')):
-                os.makedirs(os.path.join(os.curdir, 'static'))
-
             file_data = requests.post(url, **options).content
             file_name = str(uuid.uuid4()) + ".m4a"
             res = self.supabase.storage.from_('shloks').upload(file_name, file_data)
@@ -56,16 +55,8 @@ class ShlokGPT(object):
         except Exception as ex:
             print(ex)
 
-template = """
-Generate a 6 line sanskrit slok about the following topics: {topic}. 
-
-The output should consist of the shlok followed by the translation in the following format:
-
-Shlok
-Translation:
-"""
-
-st.title("ShlokGPT: Generate Sanskrit Shloks with AI.")
+st.set_page_config( page_title="Shlok-GPT: Generate Sanskrit Shloks with AI.",)
+st.title("Shlok-GPT: Generate Sanskrit Shloks with AI.")
 
 def process_input():
 
@@ -110,7 +101,7 @@ def run():
 footer {visibility: hidden;}
 </style> """, unsafe_allow_html=True )
     st.divider()
-    st.text("Made by Moko.")
+    st.text("Made by Moko - https://twitter.com/MokoSharma.")
 
 if __name__ == '__main__':
     load_dotenv()
